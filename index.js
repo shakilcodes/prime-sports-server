@@ -40,6 +40,7 @@ async function run() {
   try {
     const primeSportsCollection = client.db('prime-sports').collection('classes&instructor')
     const usersCollection = client.db('prime-sports').collection('users')
+    const cartCollection = client.db('prime-sports').collection('cart')
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
@@ -47,9 +48,19 @@ async function run() {
       res.send({ token })
     })
 
+    const verifyAdmin = async(req, res, next) =>{
+      const email = req.decoded.email;
+      const query = {email: email}
+      const user = await usersCollection.findOne(query)
+      if(user?.role !== 'admin'){
+        return res.status(403).send({error: true, message: 'forbidden access'});
 
-    // user collections
-    app.get('/users', async (req, res) => {
+      }
+      next()
+    }
+
+    // user collections........................................................
+    app.get('/users', verifyJWT, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result)
     })
@@ -62,6 +73,32 @@ async function run() {
         return res.send({ message: 'user all ready exists' })
       }
       const result = await usersCollection.insertOne(user)
+      res.send(result)
+    })
+
+    app.get('/users/admin/:email', verifyJWT, async(req, res)=>{
+      const email = req.params.email;
+
+      if(req.decoded.email !== email){
+        res.send({admin: false})
+      }
+
+      const query = {email: email}
+      const user = await usersCollection.findOne(query);
+      const result = {admin: user?.role === 'admin'}
+      res.send(result)
+    })
+
+    app.get('/users/instructor/:email', verifyJWT, async(req, res)=>{
+      const email = req.params.email;
+
+      if(req.decoded.email !== email){
+        res.send({admin: false})
+      }
+
+      const query = {email: email}
+      const user = await usersCollection.findOne(query);
+      const result = {admin: user?.role === 'instructor'}
       res.send(result)
     })
 
@@ -104,7 +141,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/singleInsructor', verifyJWT, async(req, res)=>{
+    app.get('/singleInsructor', verifyJWT,  async(req, res)=>{
       const email = req.query.email;
       console.log(email)
       if(!email){
@@ -122,10 +159,48 @@ async function run() {
       res.send(result)
     });
 
-    // app.get("/singleInsructor/:email", async (req, res) => {
-    //   const toys = await primeSportsCollection.find({ seller_email: req.params.email, }).toArray();
-    //   res.send(toys);
+
+
+    app.post('/addAClass', async (req, res) => {
+      const addClass = req.body;
+      console.log(addClass)
+      const result = await primeSportsCollection.insertOne(addClass)
+      res.send(result)
+    })
+
+    app.post('/carts', async (req, res) => {
+      const addCarts = req.body;
+      const result = await cartCollection.insertOne(addCarts)
+      res.send(result)
+    })
+
+
+    // app.get("/carts/:email", async (req, res) => {
+    //   const cartedData = await cartCollection.find({ userEmail: req.params.email, }).toArray();
+    //   res.send(cartedData);
     // });
+
+    app.get('/carts/:email', verifyJWT,  async(req, res)=>{
+      const email = req.params.email;
+      console.log(email)
+      if(!email){
+        res.send([])
+      }
+
+      const decodedEmail = req.decoded.email;
+      if(email !== decodedEmail){
+        return res.status(401).send({error: true, message: 'unautorized access'});
+
+      }
+
+      const query = {userEmail: email};
+      const result = await cartCollection.find(query).toArray();
+      res.send(result)
+    });
+    app.get("/singleInsructor/:email", async (req, res) => {
+      const toys = await primeSportsCollection.find({ seller_email: req.params.email, }).toArray();
+      res.send(toys);
+    });
 
     // app.get("/allToys/:id", async (req, res) => {
     //   const id = req.params.id
