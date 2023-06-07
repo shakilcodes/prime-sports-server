@@ -24,15 +24,52 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const primeSportsCollection = client.db('prime-sports').collection('classes&instructor')
+    const usersCollection = client.db('prime-sports').collection('users')
 
-    // const indexKeys = { toy_name: 1, sub_category: 1 }; 
-    // const indexOptions = { name: "serachByTitle" }; 
-    // const result = await carCollection.createIndex(indexKeys, indexOptions);
-    // console.log(result);
+   
 
+    // user collections
+    app.get('/users', async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result)
+    })
 
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const query = {email: user.email}
+      const existingUser = await usersCollection.findOne(query)
+      if(existingUser){
+        return res.send({message: 'user all ready exists'})
+      }
+      const result = await usersCollection.insertOne(user)
+      res.send(result)
+    })
 
+      app.patch('/users/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updated = {
+        $set: {
+         role : 'admin'
+        }
+      };
+      const result = await usersCollection.updateOne(query, updated)
+      res.send(result)
+    })
 
+      app.patch('/users/instructor/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updated = {
+        $set: {
+         role : 'instructor'
+        }
+      };
+      const result = await usersCollection.updateOne(query, updated)
+      res.send(result)
+    })
+
+    // classes and instructor collections
     app.get('/classesInstructor', async (req, res) => {
       const result = await primeSportsCollection.find().toArray();
       res.send(result)
@@ -43,10 +80,11 @@ async function run() {
         { $addFields: { numberOfStudents: { $toDouble: "$numberOfStudents" } } },
         { $sort: { numberOfStudents: -1 } }
       ]).toArray();
-    
+
       res.send(result);
     });
-    
+
+
 
 
     // app.get("/allToys/:id", async (req, res) => {
@@ -61,12 +99,6 @@ async function run() {
     //   res.send(toys);
     // });
 
-    // app.post('/postToys', async (req, res) => {
-    //   const toys = req.body;
-    //   console.log(toys)
-    //   const result = await primeSportsCollection.insertOne(toys)
-    //   res.send(result)
-    // })
 
     // app.get("/searchByTitle/:text", async (req, res) => {
     //   const text = req.params.text;
@@ -81,21 +113,7 @@ async function run() {
     //   res.send(result);
     // });
 
-    // app.put('/allToys/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   console.log(id)
-    //   const query = { _id: new ObjectId(id) };
-    //   const options = { upsert: true };
-    //   const updateToy = req.body;
-    //   console.log(updateToy);
-    //   const updated = {
-    //     $set: {
-    //       price: updateToy.price,
-    //       quantity: updateToy.quantity,
-    //       description: updateToy.description,
-    //     }
-    //   };
-    //   const result = await primeSportsCollection.updateOne(query, updated, options)
+  
     //   res.send(result);
     // })
 
@@ -105,6 +123,11 @@ async function run() {
     //   const result = await primeSportsCollection.deleteOne(query)
     //   res.send(result)
     // })
+
+     // const indexKeys = { toy_name: 1, sub_category: 1 }; 
+    // const indexOptions = { name: "serachByTitle" }; 
+    // const result = await carCollection.createIndex(indexKeys, indexOptions);
+    // console.log(result);
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
