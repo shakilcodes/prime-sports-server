@@ -106,6 +106,10 @@ async function run() {
     })
 
 
+
+
+
+
     // updated data ..................................................
 
     app.patch('/users/admin/:id', async (req, res) => {
@@ -223,7 +227,7 @@ async function run() {
     })
 
     // payment..................
-    app.post('/create-payment-intent', async(req, res) => {
+    app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
       if (price) {
         const amount = parseFloat(price) * 100;
@@ -238,11 +242,31 @@ async function run() {
       }
     })
 
-    app.post('/payments', async(req, res) => {
+    app.get('/payments', async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.post('/payments', async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
       res.send(result)
     })
+
+    app.patch('/carts/updateSuccess/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updated = {
+        $set: {
+          status: 'succeeded'
+        }
+      };
+      const result = await cartCollection.updateOne(query, updated)
+      res.send(result)
+    })
+
+
+
 
     // app.get("/allToys/:id", async (req, res) => {
     //   const id = req.params.id
