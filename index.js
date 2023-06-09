@@ -214,8 +214,8 @@ async function run() {
       res.send(result)
     });
     app.get("/singleInsructor/:email", async (req, res) => {
-      const toys = await primeSportsCollection.find({ seller_email: req.params.email, }).toArray();
-      res.send(toys);
+      const instructor = await primeSportsCollection.find({ seller_email: req.params.email, }).toArray();
+      res.send(instructor);
     });
 
 
@@ -242,16 +242,35 @@ async function run() {
       }
     })
 
-    app.get('/payments', async (req, res) => {
-      const result = await paymentCollection.find().toArray();
+    // app.get('/payments', async (req, res) => {
+    //   const result = await paymentCollection.find().toArray();
+    //   res.send(result)
+    // })
+
+    app.get('/payments/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (!email) {
+        res.send([])
+      }
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(401).send({ error: true, message: 'unautorized access' });
+
+      }
+
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
       res.send(result)
-    })
+    });
+
 
     app.post('/payments', async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
       res.send(result)
     })
+
+   
 
     app.patch('/carts/updateSuccess/:id', async (req, res) => {
       const id = req.params.id;
