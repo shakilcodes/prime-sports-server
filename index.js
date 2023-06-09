@@ -242,10 +242,10 @@ async function run() {
       }
     })
 
-    // app.get('/payments', async (req, res) => {
-    //   const result = await paymentCollection.find().toArray();
-    //   res.send(result)
-    // })
+    app.get('/paymentsTest', async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result)
+    })
 
     app.get('/payments/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
