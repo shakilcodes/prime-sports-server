@@ -226,6 +226,27 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/classesUpdate/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const update = req.body;
+      console.log(update);
+      const updated = {
+        $set: {
+          title: update.title,
+          price: update.price,
+          AvailableSeats: update.AvailableSeats,
+          instrucotrName: update.instrucotrName,
+          email: update.email,
+          image: update.image
+        }
+      };
+      const result = await primeSportsCollection.updateOne(query, updated, options)
+      res.send(result);
+    })
+
     // payment..................
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
