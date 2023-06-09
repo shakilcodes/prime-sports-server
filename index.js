@@ -263,7 +263,7 @@ async function run() {
       }
     })
 
-    app.get('/paymentsTest', async (req, res) => {
+    app.get('/payments', verifyJWT, async (req, res) => {
       const result = await paymentCollection.find().toArray();
       res.send(result)
     })
@@ -305,6 +305,24 @@ async function run() {
       res.send(result)
     })
 
+
+    // FeedBack................................................
+    app.put('/feedBack/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const update = req.body;
+      const updated = {
+        $set: {
+          status: update.status,
+          feedBack: update.feedBack,
+         
+        }
+      };
+      const result = await primeSportsCollection.updateOne(query, updated, options)
+      res.send(result);
+    })
 
 
 
