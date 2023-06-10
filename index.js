@@ -151,7 +151,7 @@ async function run() {
 
 
     // classes and instructor collections.................................
-    app.get('/classesInstructor', async (req, res) => {
+    app.get('/classesInstructor', verifyJWT, async (req, res) => {
       const result = await primeSportsCollection.find().toArray();
       res.send(result)
     })
