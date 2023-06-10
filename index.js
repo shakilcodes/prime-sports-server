@@ -262,7 +262,7 @@ async function run() {
         })
       }
     })
-  
+    // payment information geting form here
     app.get('/payments/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (!email) {
