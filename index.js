@@ -262,27 +262,24 @@ async function run() {
         })
       }
     })
-
-    app.get('/payments', verifyJWT, async (req, res) => {
-      const result = await paymentCollection.find().toArray();
-      res.send(result)
-    })
-
+  
     app.get('/payments/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (!email) {
-        res.send([])
+        res.send([]);
       }
+      
       const decodedEmail = req.decoded.email;
       if (email !== decodedEmail) {
-        return res.status(401).send({ error: true, message: 'unautorized access' });
-
+        return res.status(401).send({ error: true, message: 'unauthorized access' });
       }
-
+    
       const query = { email: email };
-      const result = await paymentCollection.find(query).toArray();
-      res.send(result)
+      const options = { sort: { date: -1 } }; // Sort by date in descending order
+      const result = await paymentCollection.find(query, options).toArray();
+      res.send(result);
     });
+
 
 
     app.post('/payments', async (req, res) => {
@@ -323,40 +320,6 @@ async function run() {
       const result = await primeSportsCollection.updateOne(query, updated, options)
       res.send(result);
     })
-
-
-
-    // app.get("/allToys/:id", async (req, res) => {
-    //   const id = req.params.id
-    //   const quary = { _id: new ObjectId(id) }
-    //   const result = await primeSportsCollection.findOne(quary)
-    //   res.send(result)
-    // })
-
-
-
-    // app.get("/searchByTitle/:text", async (req, res) => {
-    //   const text = req.params.text;
-    //   const result = await primeSportsCollection
-    //     .find({
-    //       $or: [
-    //         { toy_name: { $regex: text, $options: "i" } },
-    //         { sub_category: { $regex: text, $options: "i" } },
-    //       ],
-    //     })
-    //     .toArray();
-    //   res.send(result);
-    // });
-
-
-
-
-
-
-    // const indexKeys = { toy_name: 1, sub_category: 1 }; 
-    // const indexOptions = { name: "serachByTitle" }; 
-    // const result = await carCollection.createIndex(indexKeys, indexOptions);
-    // console.log(result);
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
